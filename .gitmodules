@@ -1,0 +1,6 @@
+[submodule "backend"]
+	path = backend
+	url = https://github.com/TuiChain/backend
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/TuiChain/frontend
