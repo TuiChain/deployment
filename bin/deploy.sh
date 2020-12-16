@@ -9,9 +9,7 @@ pp_info "required-tools" "Checking if you have all the required tools"
 
 ## docker
 if not_installed "docker"; then
-  pp_error "required-tools" "
-  We are using docker for deploying locally the TuiChain Platform. Pls install it and run this script again.
-  "
+  pp_error "required-tools" "We are using docker for deploying locally the TuiChain Platform. Pls install it and run this script again."
 
   exit 1
 else
@@ -47,7 +45,8 @@ pp_info "setup" "Setting up the environment"
 
 ## backend
 cp ./backend-docker/Dockerfile ../backend/Dockerfile
-pp_success "setup" "Backend Dockerfile copied to backend folder"
+cp ./backend-docker/entrypoint.sh ../backend/entrypoint.sh
+pp_success "setup" "Backend needed files copied to backend folder"
 
 ## frontend
 # cp ./frontend-docker/Dockerfile ../frontend/Dockerfile
@@ -56,7 +55,11 @@ pp_success "setup" "Backend Dockerfile copied to backend folder"
 
 # ---------------------------------------------------------------------------- #
 
-# pp_info "deployment" "Deploying components in docker"
+pp_info "deployment" "Deploying components in docker"
+
+cd .. && docker-compose up -d --build
+
+pp_success "deployment" "All components are deployed\n\n\tdatabase -> localhost:10000\n\tbackend  -> localhost:10001\n"
 
 
 

@@ -7,7 +7,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=freetour
+      - POSTGRES_DB=tuichainDB
       - PGDATA=/var/lib/postgresql/data/pgdata
     ports:
       - 10000:5432
@@ -19,6 +19,12 @@ services:
     build: ./backend
     image: tuichain-backend
     container_name: tuichain-backend
+    environment: 
+      DATABASE_NAME: tuichainDB
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_HOST: database
+      DATABASE_PORT: 5432
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend/:/usr/src/app/
@@ -26,3 +32,9 @@ services:
       - 10001:8000
     env_file:
       - ./.env.backend
+    restart: always
+    depends_on:
+      - database
+
+volumes:
+  pgdata:
