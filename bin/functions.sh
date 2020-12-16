@@ -1,10 +1,10 @@
 #!/bin/bash
 
-BLUE='\033[1;34m'
-GREEN='\033[1;32m'
-YELLOW='\033[1;99m'
-RED='\033[1;91m'
-RESET='\033[0m'
+BLUE='\e[34m'
+GREEN='\e[32m'
+YELLOW='\e[33m'
+RED='\e[31m'
+RESET='\e[39m'
 
 pp() {
   printf "$1[$2]: $3${RESET}\n"
