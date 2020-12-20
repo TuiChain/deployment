@@ -7,9 +7,7 @@ function __resolve()
 
 function __log()
 {
-    local timestamp
-    timestamp="$( date "+%H:%M:%S" )"
-    >&2 echo "$(tput setaf 6)[${timestamp}]$(tput sgr 0) $*"
+    >&2 echo "$(tput setaf 6)[$( date "+%H:%M:%S" )]$(tput sgr 0) $*"
 }
 
 function __notice()
@@ -58,16 +56,20 @@ function __django_manage()
     (
         set -o errexit -o pipefail -o nounset
 
-        export SECRET_KEY=secret
+        export \
+            SECRET_KEY DATABASE_ENGINE DATABASE_NAME DATABASE_USER \
+            DATABASE_PASSWORD DATABASE_HOST DATABASE_PORT FRONTEND_BUILD_DIR
 
-        export DATABASE_ENGINE=django.db.backends.sqlite3
-        export DATABASE_NAME="$( __resolve . )/django-database.sqlite3"
-        export DATABASE_USER=
-        export DATABASE_PASSWORD=
-        export DATABASE_HOST=
-        export DATABASE_PORT=
+        SECRET_KEY=secret
 
-        export FRONTEND_BUILD_DIR="$( __resolve "frontend/web/build" )"
+        DATABASE_ENGINE=django.db.backends.sqlite3
+        DATABASE_NAME="$( __resolve . )/django-database.sqlite3"
+        DATABASE_USER=
+        DATABASE_PASSWORD=
+        DATABASE_HOST=
+        DATABASE_PORT=
+
+        FRONTEND_BUILD_DIR="$( __resolve frontend/web/build )"
 
         python "${backend_dir}/manage.py" "$@"
     )
@@ -77,6 +79,7 @@ function __build_frontend()
 {
     local -a frontend_rsync_args
     frontend_rsync_args=(
+        -auO
         --exclude=.git/
         --exclude=build/
         --exclude=node_modules/
@@ -84,27 +87,25 @@ function __build_frontend()
         frontend
         )
 
-    if (( $( rsync -ainO "${frontend_rsync_args[@]}" | wc -l ) > 0 )); then
+    if (( $( rsync -in "${frontend_rsync_args[@]}" | wc -l ) > 0 )); then
         __log "Copying frontend sources..."
-        rsync -aO "${frontend_rsync_args[@]}"
+        rsync "${frontend_rsync_args[@]}"
         rm -f frontend-install-up-to-date frontend-build-up-to-date
-    elif [[ "${1:-}" == "verbose" ]]; then
+    elif [[ "${1:-}" = verbose ]]; then
         __log "(no changes to frontend sources detected)"
     fi
 
     if [[ ! -e frontend-install-up-to-date ]]; then
-        if ! ( cd "frontend/web" && yarn check > /dev/null 2>&1 ); then
-            __log "Installing frontend dependencies..."
-            ( cd "frontend/web" && yarn install --silent )
-        fi
+        __log "Installing frontend dependencies..."
+        ( cd "frontend/web" && npm install --silent )
         touch frontend-install-up-to-date
     fi
 
     if [[ ! -e frontend-build-up-to-date ]]; then
         __log "Building frontend..."
-        ( cd "frontend/web" && yarn build ) &&
-            { [[ "${1:-}" == "" ]] || __log "Frontend rebuilt successfully."; } ||
-            { [[ "${1:-}" == "" ]] || __error "Failed to rebuild frontend."; }
+        ( cd "frontend/web" && npm run build ) &&
+            { [[ "${1:-}" = "" ]] || __log "Frontend rebuilt successfully."; } ||
+            { [[ "${1:-}" = "" ]] || __error "Failed to rebuild frontend."; }
         touch frontend-build-up-to-date
     fi
 }
@@ -261,7 +262,7 @@ print(get_user_model().objects.filter(username="admin").exists())
 EOF
 )"
 
-    if [[ "${superuser_exists}" == False ]]; then
+    if [[ "${superuser_exists}" = False ]]; then
 
         __log "Creating Django superuser..."
 
