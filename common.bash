@@ -203,7 +203,7 @@ EOF
         python <<EOF > ethereum-dai-contract.txt
 import web3
 import tuichain_ethereum as tui
-import tuichain_ethereum._test as tui_test
+import tuichain_ethereum.test as tui_test
 
 dai = tui_test.DaiMockContract.deploy(
     provider=web3.HTTPProvider("${network_url}"),
@@ -211,8 +211,11 @@ dai = tui_test.DaiMockContract.deploy(
     ).get()
 
 for key in "${keys[*]}".split():
-    address = tui.PrivateKey(bytes.fromhex(key)).address
-    dai.mint(account_address=address, atto_dai=100_000 * (10 ** 18)).get()
+
+    dai.mint(
+        account_private_key=tui.PrivateKey(bytes.fromhex(key)),
+        atto_dai=100_000 * (10 ** 18)
+        ).get()
 
 print(dai.address)
 EOF
