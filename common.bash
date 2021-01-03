@@ -121,6 +121,17 @@ function __do_things()
     __notice "Backend:    ${backend_dir}"
     __notice "Blockchain: ${blockchain_dir}"
 
+    # initialize and update submodules
+
+    __log "Updating submodules..."
+
+    (
+        set -o errexit -o pipefail -o nounset
+        cd "${script_dir}"
+        git submodule init
+        git submodule update --checkout
+    )
+
     # set up virtual environment
 
     if [[ ! -e "${venv_dir}/pyvenv.cfg" ]]; then

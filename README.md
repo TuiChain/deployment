@@ -9,7 +9,6 @@ This repository contains scripts to deploy the TuiChain application:
 
 Run a script without any arguments for more information.
 
-The other three repositories are included here as submodules, the idea being to store in this repo a working combination of specific versions of those repos.
-To use these submodules, do the usual `git submodule init && git submodule update` dance.
+The other three repositories are included here as submodules, the idea being to store in this repo a working combination of specific versions of those repos. The scripts automatically initialize and update them.
 
 <!-- ----------------------------------------------------------------------- -->
