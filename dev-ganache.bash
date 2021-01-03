@@ -129,7 +129,7 @@ function __set_up_ethereum_network()
 
     if ! npx ganache-cli --help > /dev/null 2>&1; then
         __log "Installing Ganache..."
-        npm install --silent ganache-cli
+        npm install --no-save --silent ganache-cli
     fi
 
     # start Ganache
