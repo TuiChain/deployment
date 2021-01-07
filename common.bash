@@ -57,15 +57,31 @@ function __django_manage()
         set -o errexit -o pipefail -o nounset
 
         export \
-            ETHEREUM_PROVIDER MASTER_ACCOUNT_PRIVATE_KEY CONTROLLER_ADDRESS \
-            SECRET_KEY DATABASE_ENGINE DATABASE_NAME DATABASE_USER \
-            DATABASE_PASSWORD DATABASE_HOST DATABASE_PORT FRONTEND_BUILD_DIR
+            SECRET_KEY \
+            DEBUG \
+            ALLOWED_HOSTS \
+            FRONTEND_DIR \
+            DATABASE_ENGINE \
+            DATABASE_NAME \
+            DATABASE_USER \
+            DATABASE_PASSWORD \
+            DATABASE_HOST \
+            DATABASE_PORT \
+            EMAIL_USE_TLS \
+            EMAIL_PORT \
+            EMAIL_HOST \
+            EMAIL_HOST_USER \
+            EMAIL_HOST_PASSWORD \
+            EMAIL_BACKEND \
+            ETHEREUM_PROVIDER \
+            ETHEREUM_MASTER_ACCOUNT_PRIVATE_KEY \
+            ETHEREUM_CONTROLLER_ADDRESS
 
-        SECRET_KEY=secret
+        SECRET_KEY=test
+        DEBUG=True
+        ALLOWED_HOSTS=
 
-        ETHEREUM_PROVIDER="${network_url}"
-        MASTER_ACCOUNT_PRIVATE_KEY="${keys[0]}"
-        CONTROLLER_ADDRESS="${controller_contract_address}"
+        FRONTEND_DIR="$( __resolve frontend/web/build )"
 
         DATABASE_ENGINE=django.db.backends.sqlite3
         DATABASE_NAME="$( __resolve . )/django-database.sqlite3"
@@ -74,7 +90,16 @@ function __django_manage()
         DATABASE_HOST=
         DATABASE_PORT=
 
-        FRONTEND_BUILD_DIR="$( __resolve frontend/web/build )"
+        EMAIL_USE_TLS=True
+        EMAIL_PORT=587
+        EMAIL_HOST=smtp.gmail.com
+        EMAIL_HOST_USER=tuichainthings@gmail.com
+        EMAIL_HOST_PASSWORD=tuichainrulesohyesitdoes
+        EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+
+        ETHEREUM_PROVIDER="${network_url}"
+        ETHEREUM_MASTER_ACCOUNT_PRIVATE_KEY="${keys[0]}"
+        ETHEREUM_CONTROLLER_ADDRESS="${controller_contract_address}"
 
         python "${backend_dir}/manage.py" "$@"
     )
@@ -160,23 +185,25 @@ function __do_things()
 
     # upgrade pip to avoid warnings
 
-    if [[ ! -e pip-upgraded.txt ]]; then
+    if [[ ! -e pip-upgraded ]]; then
         __log "Upgrading pip..."
         pip -q install -U pip wheel
-        touch pip-upgraded.txt
+        touch pip-upgraded
     fi
 
     # install dependencies
 
-    if ! pip list | grep tuichain-ethereum > /dev/null 2>&1; then
-        __log "Installing blockchain component..."
-        pip -q install "${blockchain_dir}"
-    fi
-
     if pip freeze -r "${backend_dir}/requirements.txt" 2>&1 > /dev/null |
         grep WARNING: > /dev/null; then
         __log "Installing backend dependencies..."
+        rm -f blockchain-installed
         pip -q install -r "${backend_dir}/requirements.txt"
+    fi
+
+    if [[ ! -e blockchain-installed ]]; then
+        __log "Installing blockchain component..."
+        pip -q install --force-reinstall "${blockchain_dir}"
+        touch blockchain-installed
     fi
 
     # generate Ethereum accounts
