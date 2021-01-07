@@ -57,10 +57,15 @@ function __django_manage()
         set -o errexit -o pipefail -o nounset
 
         export \
+            ETHEREUM_PROVIDER MASTER_ACCOUNT_PRIVATE_KEY CONTROLLER_ADDRESS \
             SECRET_KEY DATABASE_ENGINE DATABASE_NAME DATABASE_USER \
             DATABASE_PASSWORD DATABASE_HOST DATABASE_PORT FRONTEND_BUILD_DIR
 
         SECRET_KEY=secret
+
+        ETHEREUM_PROVIDER="${network_url}"
+        MASTER_ACCOUNT_PRIVATE_KEY="${keys[0]}"
+        CONTROLLER_ADDRESS="${controller_contract_address}"
 
         DATABASE_ENGINE=django.db.backends.sqlite3
         DATABASE_NAME="$( __resolve . )/django-database.sqlite3"

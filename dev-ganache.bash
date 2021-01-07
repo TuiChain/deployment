@@ -156,7 +156,7 @@ function __set_up_ethereum_network()
 
     while ! nc -z localhost 8545 > /dev/null 2>&1; do sleep 1; done
 
-    network_url=http://localhost:8545
+    network_url=http://localhost:8545/
 }
 
 __do_things "Local Ganache test network" : __set_up_ethereum_network
