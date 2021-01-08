@@ -323,10 +323,14 @@ EOF
 
     __log "Starting Django development server..."
 
-    __notice "Django server is at http://localhost:8000/"
-    __notice "Django superuser has username 'admin', password 'admin'"
-
-    __notice "Ethereum provider is at ${network_url}"
+    __notice "Django server:"
+    __notice "     http://localhost:8000/"
+    __notice "Django superuser:"
+    __notice "     Email: admin@admin.admin"
+    __notice "     Username: admin"
+    __notice "     Password: admin"
+    __notice "Ethereum provider:"
+    __notice "     ${network_url}"
     __notice "Ethereum Dai contract:"
     __notice "     ${dai_contract_address}"
     __notice "Ethereum controller contract:"
