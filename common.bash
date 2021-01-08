@@ -90,11 +90,11 @@ function __django_manage()
         DATABASE_HOST=
         DATABASE_PORT=
 
-        EMAIL_USE_TLS=True
-        EMAIL_PORT=587
-        EMAIL_HOST=smtp.gmail.com
-        EMAIL_HOST_USER=tuichainthings@gmail.com
-        EMAIL_HOST_PASSWORD=tuichainrulesohyesitdoes
+        EMAIL_USE_TLS=False
+        EMAIL_PORT=2525
+        EMAIL_HOST=smtp.mailtrap.io
+        EMAIL_HOST_USER=2d9e3ff1649e5b
+        EMAIL_HOST_PASSWORD=229c33d92162ba
         EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 
         ETHEREUM_PROVIDER="${network_url}"
