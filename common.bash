@@ -127,7 +127,7 @@ function __build_frontend()
 
     if [[ ! -e frontend-install-up-to-date ]]; then
         __log "Installing frontend dependencies..."
-        ( cd "frontend/web" && npm install --no-save --silent )
+        ( cd "frontend/web" && npm install --silent )
         touch frontend-install-up-to-date
     fi
 
