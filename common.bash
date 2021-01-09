@@ -193,7 +193,7 @@ function __do_things()
 
     if [[ ! -e pip-upgraded ]]; then
         __log "Upgrading pip..."
-        pip -q install -U pip wheel
+        pip -q install -U pip setuptools wheel
         touch pip-upgraded
     fi
 
