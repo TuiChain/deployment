@@ -13,7 +13,7 @@ The other three repositories are included here as submodules, the idea being to 
 
 ## Dependencies
 
-- You must have Python 3.8 (or higher) and `npm` installed.
+- You must have Python 3.8 or higher and `npm` 6 or 7 installed.
 - On Debian/Ubuntu you probably also need: `sudo apt-get install python3-dev`
 
 <!-- ----------------------------------------------------------------------- -->
