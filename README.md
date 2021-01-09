@@ -14,7 +14,6 @@ The other three repositories are included here as submodules, the idea being to 
 ## Dependencies
 
 - You must have Python 3.8 (or higher) and `npm` installed.
-- On Debian/Ubuntu you probably also need: `sudo apt-get install python3-dev libpq-dev`
-- On macOS you probably also need: `brew install postgresql`
+- On Debian/Ubuntu you probably also need: `sudo apt-get install python3-dev`
 
 <!-- ----------------------------------------------------------------------- -->

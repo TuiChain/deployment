@@ -193,17 +193,15 @@ function __do_things()
 
     # install dependencies
 
+    if ! pip list | grep tuichain-ethereum > /dev/null 2>&1; then
+        __log "Installing blockchain component..."
+        pip -q install "${blockchain_dir}"
+    fi
+
     if pip freeze -r "${backend_dir}/requirements.txt" 2>&1 > /dev/null |
         grep WARNING: > /dev/null; then
         __log "Installing backend dependencies..."
-        rm -f blockchain-installed
         pip -q install -r "${backend_dir}/requirements.txt"
-    fi
-
-    if [[ ! -e blockchain-installed ]]; then
-        __log "Installing blockchain component..."
-        pip -q install --force-reinstall "${blockchain_dir}"
-        touch blockchain-installed
     fi
 
     # generate Ethereum accounts
