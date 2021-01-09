@@ -133,7 +133,13 @@ function __build_frontend()
 
     if [[ ! -e frontend-build-up-to-date ]]; then
         __log "Building frontend..."
-        ( cd "frontend/web" && npm run build ) &&
+        (
+            set -o errexit -o pipefail -o nounset
+            cd "frontend/web"
+            export REACT_APP_API_URL
+            REACT_APP_API_URL=http://localhost:8000/api
+            npm run build
+        ) &&
             { [[ "${1:-}" = "" ]] || __log "Frontend rebuilt successfully."; } ||
             { [[ "${1:-}" = "" ]] || __error "Failed to rebuild frontend."; }
         touch frontend-build-up-to-date
