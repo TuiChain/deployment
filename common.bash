@@ -42,9 +42,18 @@ function __fail()
     exit 1
 }
 
-function __github_branch_hash()
+function __github_resolve_hash()
 {
-    git ls-remote "https://github.com/TuiChain/$1.git" HEAD | cut -f1
+    local result
+
+    if [[ "$2" =~ ^[A-Fa-f0-9]{40}$ ]]; then
+        result="$2"
+    else
+        result=( $( git ls-remote "https://github.com/TuiChain/$1.git" "$2" | cut -f1 ) )
+        (( ${#result[@]} == 1 )) || __fail "Couldn't find branch $2 of $1"
+    fi
+
+    echo "${result}"
 }
 
 function __github_download()
@@ -119,10 +128,10 @@ function __django_manage()
 
 function __build_frontend()
 {
-    if [[ -z "${frontend_dir:-}" ]]; then
+    if [[ "${frontend_dir}" == @* ]]; then
 
         local frontend_hash
-        frontend_hash="$( __github_branch_hash frontend )"
+        frontend_hash="$( __github_resolve_hash frontend "${frontend_dir:1}" )"
 
         if [[ ! -e frontend-hash.txt || "$( cat frontend-hash.txt )" != "${frontend_hash}" ]]; then
             __log "Downloading frontend..."
@@ -188,10 +197,32 @@ function __do_things()
 {
     trap '{ [[ -z "$(jobs -p)" ]] || kill -INT $(jobs -p); wait; }' EXIT
 
+    frontend_dir="${frontend_dir:-@main}"
+    backend_dir="${backend_dir:-@main}"
+    blockchain_dir="${blockchain_dir:-@main}"
+
+    if [[ "${frontend_dir}" == @* ]]; then
+        __notice "Frontend:   ${frontend_dir:1} @ https://github.com/TuiChain/frontend"
+    else
+        frontend_dir="$( __resolve "${frontend_dir}" )"
+        __notice "Frontend:   ${frontend_dir}"
+    fi
+
+    if [[ "${backend_dir}" == @* ]]; then
+        __notice "Backend:    ${backend_dir:1} @ https://github.com/TuiChain/backend"
+    else
+        backend_dir="$( __resolve "${backend_dir}" )"
+        __notice "Backend:    ${backend_dir}"
+    fi
+
+    if [[ "${blockchain_dir}" == @* ]]; then
+        __notice "Blockchain: ${blockchain_dir:1} @ https://github.com/TuiChain/blockchain"
+    else
+        blockchain_dir="$( __resolve "${blockchain_dir}" )"
+        __notice "Blockchain: ${blockchain_dir}"
+    fi
+
     __notice "Network:    $1"
-    __notice "Frontend:   ${frontend_dir:-"main @ https://github.com/TuiChain/frontend"}"
-    __notice "Backend:    ${backend_dir:-"main @ https://github.com/TuiChain/backend"}"
-    __notice "Blockchain: ${blockchain_dir:-"main @ https://github.com/TuiChain/blockchain"}"
 
     # set up virtual environment
 
@@ -224,15 +255,16 @@ function __do_things()
 
     # install blockchain component
 
-    if [[ -z "${blockchain_dir:-}" ]]; then
+    if [[ "${blockchain_dir}" == @* ]]; then
 
         local blockchain_hash
-        blockchain_hash="$( __github_branch_hash blockchain )"
+        blockchain_hash="$( __github_resolve_hash blockchain "${blockchain_dir:1}" )"
 
         if [[ ! -e blockchain-hash.txt || "$( cat blockchain-hash.txt )" != "${blockchain_hash}" ]]; then
             __log "Installing blockchain component..."
             rm -f blockchain-hash.txt
-            pip -q install --force-reinstall --no-deps "https://github.com/TuiChain/blockchain/archive/${blockchain_hash}.tar.gz"
+            ! pip list | grep tuichain-ethereum > /dev/null 2>&1 || pip -q uninstall -y tuichain-ethereum
+            pip -q install "https://github.com/TuiChain/blockchain/archive/${blockchain_hash}.tar.gz"
             echo "${blockchain_hash}" > blockchain-hash.txt
         fi
 
@@ -241,16 +273,17 @@ function __do_things()
         rm -f blockchain-hash.txt
 
         __log "Installing blockchain component..."
-        pip -q install --force-reinstall --no-deps "${blockchain_dir}"
+        ! pip list | grep tuichain-ethereum > /dev/null 2>&1 || pip -q uninstall -y tuichain-ethereum
+        pip -q install "${blockchain_dir}"
 
     fi
 
     # get backend component
 
-    if [[ -z "${backend_dir:-}" ]]; then
+    if [[ "${backend_dir}" == @* ]]; then
 
         local backend_hash
-        backend_hash="$( __github_branch_hash backend )"
+        backend_hash="$( __github_resolve_hash backend "${backend_dir:1}" )"
 
         if [[ ! -e backend-hash.txt || "$( cat backend-hash.txt )" != "${backend_hash}" ]]; then
             __log "Downloading backend..."

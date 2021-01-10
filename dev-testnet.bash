@@ -46,17 +46,26 @@ Django development server without having to rerun this script.
 
 Options:
 
-  --frontend <dir>
-    Use the frontend component in the given directory.
-    (default is branch main from GitHub repository TuiChain/frontend)
+  --frontend @<hash_or_branch>
+  --frontend <local_dir>
+    If the argument starts with @, use the frontend component at the
+    commit with the given (full) hash or at the given branch of its
+    repo. Otherwise use the component in the given local directory.
+    (default is branch main)
 
-  --backend <dir>
-    Use the backend component in the given directory.
-    (default is branch main from GitHub repository TuiChain/backend)
+  --backend @<hash_or_branch>
+  --backend <local_dir>
+    If the argument starts with @, use the backend component at the
+    commit with the given (full) hash or at the given branch of its
+    repo. Otherwise use the component in the given local directory.
+    (default is branch main)
 
-  --blockchain <dir>
-    Use the blockchain component in the given directory.
-    (default is branch main from GitHub repository TuiChain/blockchain)
+  --blockchain @<hash_or_branch>
+  --blockchain <local_dir>
+    If the argument starts with @, use the blockchain component at the
+    commit with the given (full) hash or at the given branch of its
+    repo. Otherwise use the component in the given local directory.
+    (default is branch main)
 
   --master <private_key>
     Use the given master account and set it as the default.
@@ -82,21 +91,21 @@ while (( $# > 0 )); do
 
         --frontend)
             __ensure_option_has_value "$@"
-            frontend_dir="$( __resolve "$2" )"
+            frontend_dir="$2"
             shift
             shift
             ;;
 
         --backend)
             __ensure_option_has_value "$@"
-            backend_dir="$( __resolve "$2" )"
+            backend_dir="$2"
             shift
             shift
             ;;
 
         --blockchain)
             __ensure_option_has_value "$@"
-            blockchain_dir="$( __resolve "$2" )"
+            blockchain_dir="$2"
             shift
             shift
             ;;
