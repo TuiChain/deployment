@@ -9,8 +9,6 @@ This repository contains scripts to deploy the TuiChain application:
 
 Run a script without any arguments for more information.
 
-The other three repositories are included here as submodules, the idea being to store in this repo a working combination of specific versions of those repos. The scripts automatically initialize and update them.
-
 ## Dependencies
 
 - You must have Python 3.8 or higher and `npm` 6 or 7 installed.

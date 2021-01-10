@@ -1,9 +1,0 @@
-[submodule "backend"]
-    path = backend
-    url = https://github.com/TuiChain/backend.git
-[submodule "blockchain"]
-    path = blockchain
-    url = https://github.com/TuiChain/blockchain.git
-[submodule "frontend"]
-    path = frontend
-    url = https://github.com/TuiChain/frontend.git

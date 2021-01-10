@@ -43,15 +43,15 @@ Options:
 
   --frontend <dir>
     Use the frontend component in the given directory.
-    (default is submodule 'frontend' in this script's directory)
+    (default is branch main from GitHub repository TuiChain/frontend)
 
   --backend <dir>
     Use the backend component in the given directory.
-    (default is submodule 'backend' in this script's directory)
+    (default is branch main from GitHub repository TuiChain/backend)
 
   --blockchain <dir>
     Use the blockchain component in the given directory.
-    (default is submodule 'blockchain' in this script's directory)
+    (default is branch main from GitHub repository TuiChain/blockchain)
 
   --ganache-verbose
     Log requests sent to Ganache.
@@ -109,15 +109,6 @@ while (( $# > 0 )); do
 done
 
 [[ ! -z "${venv_dir+x}" ]] || __bad_usage "Missing argument <venv_dir>"
-
-[[ ! -z "${frontend_dir+x}" ]] ||
-    frontend_dir="$( __resolve "${script_dir}/frontend" )"
-
-[[ ! -z "${backend_dir+x}" ]] ||
-    backend_dir="$( __resolve "${script_dir}/backend" )"
-
-[[ ! -z "${blockchain_dir+x}" ]] ||
-    blockchain_dir="$( __resolve "${script_dir}/blockchain" )"
 
 num_user_accounts=5
 

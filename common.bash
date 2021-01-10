@@ -42,6 +42,18 @@ function __fail()
     exit 1
 }
 
+function __github_branch_hash()
+{
+    git ls-remote "https://github.com/TuiChain/$1.git" HEAD | cut -f1
+}
+
+function __github_download()
+{
+    mkdir "$3"
+    curl -LsS "https://github.com/TuiChain/$1/archive/$2.tar.gz" |
+        tar --strip-components 1 -C "$3" -xzf -
+}
+
 function __ether_balance()
 {
     python <<EOF
@@ -107,22 +119,46 @@ function __django_manage()
 
 function __build_frontend()
 {
-    local -a frontend_rsync_args
-    frontend_rsync_args=(
-        -auO
-        --exclude=.git/
-        --exclude=build/
-        --exclude=node_modules/
-        "${frontend_dir}/"
-        frontend
-        )
+    if [[ -z "${frontend_dir:-}" ]]; then
 
-    if (( $( rsync -in "${frontend_rsync_args[@]}" | wc -l ) > 0 )); then
-        __log "Copying frontend sources..."
-        rsync "${frontend_rsync_args[@]}"
-        rm -f frontend-install-up-to-date frontend-build-up-to-date
-    elif [[ "${1:-}" = verbose ]]; then
-        __log "(no changes to frontend sources detected)"
+        local frontend_hash
+        frontend_hash="$( __github_branch_hash frontend )"
+
+        if [[ ! -e frontend-hash.txt || "$( cat frontend-hash.txt )" != "${frontend_hash}" ]]; then
+            __log "Downloading frontend..."
+            rm -f frontend-hash.txt frontend-install-up-to-date frontend-build-up-to-date
+            rm -fr frontend
+            __github_download frontend "${frontend_hash}" frontend
+            echo "${frontend_hash}" > frontend-hash.txt
+        elif [[ "${1:-}" = verbose ]]; then
+            __log "(no changes to frontend sources detected)"
+        fi
+
+    else
+
+        if [[ -e frontend-hash.txt ]]; then
+            rm frontend-hash.txt
+            rm -fr frontend
+        fi
+
+        local -a frontend_rsync_args
+        frontend_rsync_args=(
+            -auO
+            --exclude=.git/
+            --exclude=build/
+            --exclude=node_modules/
+            "${frontend_dir}/"
+            frontend
+            )
+
+        if (( $( rsync -in "${frontend_rsync_args[@]}" | wc -l ) > 0 )); then
+            __log "Copying frontend sources..."
+            rsync "${frontend_rsync_args[@]}"
+            rm -f frontend-install-up-to-date frontend-build-up-to-date
+        elif [[ "${1:-}" = verbose ]]; then
+            __log "(no changes to frontend sources detected)"
+        fi
+
     fi
 
     if [[ ! -e frontend-install-up-to-date ]]; then
@@ -153,20 +189,9 @@ function __do_things()
     trap '{ [[ -z "$(jobs -p)" ]] || kill -INT $(jobs -p); wait; }' EXIT
 
     __notice "Network:    $1"
-    __notice "Frontend:   ${frontend_dir}"
-    __notice "Backend:    ${backend_dir}"
-    __notice "Blockchain: ${blockchain_dir}"
-
-    # initialize and update submodules
-
-    __log "Updating submodules..."
-
-    (
-        set -o errexit -o pipefail -o nounset
-        cd "${script_dir}"
-        git submodule init
-        git submodule update --checkout
-    )
+    __notice "Frontend:   ${frontend_dir:-"main @ https://github.com/TuiChain/frontend"}"
+    __notice "Backend:    ${backend_dir:-"main @ https://github.com/TuiChain/backend"}"
+    __notice "Blockchain: ${blockchain_dir:-"main @ https://github.com/TuiChain/blockchain"}"
 
     # set up virtual environment
 
@@ -197,11 +222,51 @@ function __do_things()
         touch pip-upgraded
     fi
 
-    # install dependencies
+    # install blockchain component
 
-    if ! pip list | grep tuichain-ethereum > /dev/null 2>&1; then
+    if [[ -z "${blockchain_dir:-}" ]]; then
+
+        local blockchain_hash
+        blockchain_hash="$( __github_branch_hash blockchain )"
+
+        if [[ ! -e blockchain-hash.txt || "$( cat blockchain-hash.txt )" != "${blockchain_hash}" ]]; then
+            __log "Installing blockchain component..."
+            rm -f blockchain-hash.txt
+            pip -q install --force-reinstall --no-deps "https://github.com/TuiChain/blockchain/archive/${blockchain_hash}.tar.gz"
+            echo "${blockchain_hash}" > blockchain-hash.txt
+        fi
+
+    else
+
+        rm -f blockchain-hash.txt
+
         __log "Installing blockchain component..."
-        pip -q install "${blockchain_dir}"
+        pip -q install --force-reinstall --no-deps "${blockchain_dir}"
+
+    fi
+
+    # get backend component
+
+    if [[ -z "${backend_dir:-}" ]]; then
+
+        local backend_hash
+        backend_hash="$( __github_branch_hash backend )"
+
+        if [[ ! -e backend-hash.txt || "$( cat backend-hash.txt )" != "${backend_hash}" ]]; then
+            __log "Downloading backend..."
+            rm -f backend-hash.txt
+            rm -fr backend
+            __github_download backend "${backend_hash}" backend
+            echo "${backend_hash}" > backend-hash.txt
+        fi
+
+        backend_dir=backend
+
+    else
+
+        rm -f backend-hash.txt
+        rm -fr backend
+
     fi
 
     if pip freeze -r "${backend_dir}/requirements.txt" 2>&1 > /dev/null |
