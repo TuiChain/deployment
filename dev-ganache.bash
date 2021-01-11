@@ -19,11 +19,12 @@ if (( $# == 0 )); then
     >&2 printf "\
 Usage: $0 [options...] <venv_dir>
 
-Runs a development web server locally with a SQLite database, and uses a
-local Ganache test network.
+Runs a development Create-React-App server and a development Django
+server locally with a SQLite database, and uses a local Ganache test
+network.
 
 This script creates a Python venv at <venv_dir> and installs all
-dependencies there. All web server and Ganache network state is also
+dependencies there. All database and Ganache network state is also
 stored there.
 
 A TuiChain Ethereum master account is generated and used to deploy the
@@ -32,12 +33,8 @@ ERC-20 contract mimicking the actual Dai contract is deployed in the
 test network. All accounts are credited with 100 ether and 100 000 Dai.
 
 This script is idempotent: if any of the steps was already run on the
-same <venv_dir>, they are not repeated, and all web server and network
+same <venv_dir>, they are not repeated, and all database and network
 state is maintained between runs.
-
-Pressing Ctrl+D will rebuild the frontend if any changes have been made.
-Changes to backend sources are also automatically picked up by the
-Django development server without having to rerun this script.
 
 Options:
 

@@ -19,11 +19,12 @@ if (( $# == 0 )); then
     >&2 printf "\
 Usage: $0 [options...] <venv_dir> <network>
 
-Runs a development web server locally with a SQLite database, and uses a
-public Ethereum test network through Infura.
+Runs a development Create-React-App server and a development Django
+server locally with a SQLite database, and uses a public Ethereum test
+network through Infura.
 
 This script creates a Python venv at <venv_dir> and installs all
-dependencies there. All web server state is also stored there. The
+dependencies there. All database state is also stored there. The
 <network> must be 'ropsten', 'kovan', 'rinkeby', or 'goerli'.
 
 This script will not generate a TuiChain Ethereum master account since
@@ -37,12 +38,8 @@ is deployed using the master account, unless an existing controller is
 given with --controller.
 
 This script is idempotent: if any of the steps was already run on the
-same <venv_dir>, they are not repeated, and all web server state is
+same <venv_dir>, they are not repeated, and all database state is
 maintained between runs.
-
-Pressing Ctrl+D will rebuild the frontend if any changes have been made.
-Changes to backend sources are also automatically picked up by the
-Django development server without having to rerun this script.
 
 Options:
 

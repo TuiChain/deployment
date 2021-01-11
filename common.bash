@@ -102,7 +102,7 @@ function __django_manage()
         DEBUG=True
         ALLOWED_HOSTS=
 
-        FRONTEND_DIR="$( __resolve frontend/web/build )"
+        FRONTEND_DIR=
 
         DATABASE_ENGINE=django.db.backends.sqlite3
         DATABASE_NAME="$( __resolve . )/django-database.sqlite3"
@@ -124,71 +124,6 @@ function __django_manage()
 
         python "${backend_dir}/manage.py" "$@"
     )
-}
-
-function __build_frontend()
-{
-    if [[ "${frontend_dir}" == @* ]]; then
-
-        local frontend_hash
-        frontend_hash="$( __github_resolve_hash frontend "${frontend_dir:1}" )"
-
-        if [[ ! -e frontend-hash.txt || "$( cat frontend-hash.txt )" != "${frontend_hash}" ]]; then
-            __log "Downloading frontend..."
-            rm -f frontend-hash.txt frontend-install-up-to-date frontend-build-up-to-date
-            rm -fr frontend
-            __github_download frontend "${frontend_hash}" frontend
-            echo "${frontend_hash}" > frontend-hash.txt
-        elif [[ "${1:-}" = verbose ]]; then
-            __log "(no changes to frontend sources detected)"
-        fi
-
-    else
-
-        if [[ -e frontend-hash.txt ]]; then
-            rm frontend-hash.txt
-            rm -fr frontend
-        fi
-
-        local -a frontend_rsync_args
-        frontend_rsync_args=(
-            -auO
-            --exclude=.git/
-            --exclude=build/
-            --exclude=node_modules/
-            "${frontend_dir}/"
-            frontend
-            )
-
-        if (( $( rsync -in "${frontend_rsync_args[@]}" | wc -l ) > 0 )); then
-            __log "Copying frontend sources..."
-            rsync "${frontend_rsync_args[@]}"
-            rm -f frontend-install-up-to-date frontend-build-up-to-date
-        elif [[ "${1:-}" = verbose ]]; then
-            __log "(no changes to frontend sources detected)"
-        fi
-
-    fi
-
-    if [[ ! -e frontend-install-up-to-date ]]; then
-        __log "Installing frontend dependencies..."
-        ( cd "frontend/web" && npm install --silent )
-        touch frontend-install-up-to-date
-    fi
-
-    if [[ ! -e frontend-build-up-to-date ]]; then
-        __log "Building frontend..."
-        (
-            set -o errexit -o pipefail -o nounset
-            cd "frontend/web"
-            export REACT_APP_API_URL
-            REACT_APP_API_URL=http://localhost:8000/api
-            npm run build
-        ) &&
-            { [[ "${1:-}" = "" ]] || __log "Frontend rebuilt successfully."; } ||
-            { [[ "${1:-}" = "" ]] || __error "Failed to rebuild frontend."; }
-        touch frontend-build-up-to-date
-    fi
 }
 
 # ---------------------------------------------------------------------------- #
@@ -333,7 +268,30 @@ EOF
 
     # build frontend
 
-    __build_frontend
+    if [[ "${frontend_dir}" == @* ]]; then
+
+        local frontend_hash
+        frontend_hash="$( __github_resolve_hash frontend "${frontend_dir:1}" )"
+
+        if [[ ! -e frontend-hash.txt || "$( cat frontend-hash.txt )" != "${frontend_hash}" ]]; then
+            __log "Downloading frontend..."
+            rm -f frontend-hash.txt
+            rm -fr frontend
+            __github_download frontend "${frontend_hash}" frontend
+            echo "${frontend_hash}" > frontend-hash.txt
+        fi
+
+        frontend_dir=frontend
+
+    else
+
+        rm -f frontend-hash.txt
+        rm -fr frontend
+
+    fi
+
+    __log "Installing frontend dependencies..."
+    ( cd "${frontend_dir}/web" && npm install --silent )
 
     # run hook to set up Ethereum network
 
@@ -421,11 +379,13 @@ EOF
 
     fi
 
-    # run django development server
+    # run django and create-react-app development servers
 
-    __log "Starting Django development server..."
+    __log "Starting Django and Create-React-App development servers..."
 
-    __notice "Django server:"
+    __notice "Create-React-App development server:"
+    __notice "     http://localhost:3000/"
+    __notice "Django development server:"
     __notice "     http://localhost:8000/"
     __notice "Django superuser:"
     __notice "     Email: admin@admin.admin"
@@ -454,14 +414,15 @@ EOF
 
     __django_manage runserver 8000 &
 
-    # rebuild frontend on Ctrl+D
-
-    local bla
-
-    while true; do
-        while read bla; do :; done
-        __build_frontend verbose
-    done
+    (
+        set -o errexit -o pipefail -o nounset
+        cd "${frontend_dir}/web"
+        export BROWSER FORCE_COLOR REACT_APP_API_URL
+        BROWSER=none
+        FORCE_COLOR=true
+        REACT_APP_API_URL=http://localhost:8000/api
+        npm run start | cat
+    )
 }
 
 # ---------------------------------------------------------------------------- #
