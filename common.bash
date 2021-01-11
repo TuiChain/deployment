@@ -422,7 +422,9 @@ EOF
         FORCE_COLOR=true
         REACT_APP_API_URL=http://localhost:8000/api
         npm run start | cat
-    )
+    ) &
+
+    wait -n
 }
 
 # ---------------------------------------------------------------------------- #
