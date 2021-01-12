@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 # ---------------------------------------------------------------------------- #
 
+major="${BASH_VERSINFO[0]}"
+minor="${BASH_VERSINFO[1]}"
+
+if (( major < 4 || (major == 4 && minor < 3) )); then
+    >&2 echo "Bash 4.3 or above is required."
+    exit 1
+fi
+
 set -o errexit -o pipefail -o nounset
 
 # get script directory

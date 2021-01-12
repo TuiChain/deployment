@@ -81,7 +81,6 @@ function __django_manage()
             SECRET_KEY \
             DEBUG \
             ALLOWED_HOSTS \
-            FRONTEND_DIR \
             DATABASE_ENGINE \
             DATABASE_NAME \
             DATABASE_USER \
@@ -101,8 +100,6 @@ function __django_manage()
         SECRET_KEY=test
         DEBUG=True
         ALLOWED_HOSTS=
-
-        FRONTEND_DIR=
 
         DATABASE_ENGINE=django.db.backends.sqlite3
         DATABASE_NAME="$( __resolve . )/django-database.sqlite3"
