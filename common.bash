@@ -134,21 +134,21 @@ function __do_things()
     blockchain_dir="${blockchain_dir:-@main}"
 
     if [[ "${frontend_dir}" == @* ]]; then
-        __notice "Frontend:   ${frontend_dir:1} @ https://github.com/TuiChain/frontend"
+        __notice "Frontend:   https://github.com/TuiChain/frontend @ ${frontend_dir:1}"
     else
         frontend_dir="$( __resolve "${frontend_dir}" )"
         __notice "Frontend:   ${frontend_dir}"
     fi
 
     if [[ "${backend_dir}" == @* ]]; then
-        __notice "Backend:    ${backend_dir:1} @ https://github.com/TuiChain/backend"
+        __notice "Backend:    https://github.com/TuiChain/backend @ ${backend_dir:1}"
     else
         backend_dir="$( __resolve "${backend_dir}" )"
         __notice "Backend:    ${backend_dir}"
     fi
 
     if [[ "${blockchain_dir}" == @* ]]; then
-        __notice "Blockchain: ${blockchain_dir:1} @ https://github.com/TuiChain/blockchain"
+        __notice "Blockchain: https://github.com/TuiChain/blockchain @ ${blockchain_dir:1}"
     else
         blockchain_dir="$( __resolve "${blockchain_dir}" )"
         __notice "Blockchain: ${blockchain_dir}"
@@ -273,7 +273,7 @@ EOF
         if [[ ! -e frontend-hash.txt || "$( cat frontend-hash.txt )" != "${frontend_hash}" ]]; then
             __log "Downloading frontend..."
             rm -f frontend-hash.txt
-            rm -fr frontend
+            rm -fr frontend frontend-package-sha1.txt frontend-package-lock-sha1.txt
             __github_download frontend "${frontend_hash}" frontend
             echo "${frontend_hash}" > frontend-hash.txt
         fi
@@ -282,13 +282,22 @@ EOF
 
     else
 
-        rm -f frontend-hash.txt
-        rm -fr frontend
+        if [[ -e frontend-hash.txt ]]; then
+            rm -fr frontend frontend-package-sha1.txt frontend-package-lock-sha1.txt
+            rm frontend-hash.txt
+        fi
 
     fi
 
-    __log "Installing frontend dependencies..."
-    ( cd "${frontend_dir}/web" && npm install --silent )
+    if [[ ! -e frontend-package-sha1.txt ||
+        ! -e frontend-package-lock-sha1.txt ||
+        "$( cat frontend-package-sha1.txt )" != "$( sha1sum "${frontend_dir}/web/package.json" | cut -d' ' -f1 )" ||
+        "$( cat frontend-package-lock-sha1.txt )" != "$( sha1sum "${frontend_dir}/web/package-lock.json" | cut -d' ' -f1 )" ]]; then
+        __log "Installing frontend dependencies..."
+        ( cd "${frontend_dir}/web" && npm install --silent )
+        sha1sum "${frontend_dir}/web/package.json" | cut -d' ' -f1 > frontend-package-sha1.txt
+        sha1sum "${frontend_dir}/web/package-lock.json" | cut -d' ' -f1 > frontend-package-lock-sha1.txt
+    fi
 
     # run hook to set up Ethereum network
 
