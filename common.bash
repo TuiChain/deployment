@@ -246,9 +246,10 @@ function __do_things()
 
         __log "Generating Ethereum test accounts..."
 
-        for (( i = 0; i < ${num_user_accounts:-0} + 1; ++i )); do
-            hexdump -n 32 -e '8/4 "%08x" 1 "\n"' /dev/urandom \
-                >> ethereum-accounts.txt
+        printf "%64s\n" | tr " " "9" >> ethereum-accounts.txt
+
+        for (( i = 1; i < ${num_user_accounts:-0} + 1; ++i )); do
+            printf "%64s\n" | tr " " "$i" >> ethereum-accounts.txt
         done
 
     fi
@@ -394,9 +395,9 @@ EOF
     __notice "Django development server:"
     __notice "     http://localhost:8000/"
     __notice "Django superuser:"
-    __notice "     Email: admin@admin.admin"
     __notice "     Username: admin"
     __notice "     Password: admin"
+    __notice "     Email: admin@admin.admin"
     __notice "Ethereum provider:"
     __notice "     ${network_url}"
     __notice "Ethereum Dai contract:"
@@ -404,16 +405,16 @@ EOF
     __notice "Ethereum controller contract:"
     __notice "     ${controller_contract_address}"
     __notice "Ethereum master account:"
-    __notice "     ${addresses[0]}"
     __notice "     ${keys[0]}"
+    __notice "     ${addresses[0]}"
 
     if (( ${#addresses[@]} > 1 )); then
 
         __notice "Ethereum user accounts:"
 
         for (( i = 1; i < ${#addresses[@]}; ++i )); do
-            __notice " [$i] ${addresses[i]}"
-            __notice "     ${keys[i]}"
+            __notice " [$i] ${keys[i]}"
+            __notice "     ${addresses[i]}"
         done
 
     fi
