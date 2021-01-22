@@ -179,9 +179,12 @@ function __do_things()
 
     # upgrade pip to avoid warnings
 
+    export PIP_DISABLE_PIP_VERSION_CHECK=1
+
     if [[ ! -e pip-upgraded ]]; then
         __log "Upgrading pip..."
-        pip -q install -U pip setuptools wheel
+        pip -q install -U setuptools wheel
+        pip -q install pip==20.2.3
         touch pip-upgraded
     fi
 
