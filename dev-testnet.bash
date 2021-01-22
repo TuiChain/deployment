@@ -166,6 +166,8 @@ done
 [[ ! -z "${venv_dir+x}" ]] || __bad_usage "Missing argument <venv_dir>"
 [[ ! -z "${network+x}" ]] || __bad_usage "Missing argument <network>"
 
+no_populate=1
+
 # ---------------------------------------------------------------------------- #
 
 function __after_creating_venv()

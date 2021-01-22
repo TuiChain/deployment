@@ -67,6 +67,9 @@ Options:
     repo. Otherwise use the component in the given local directory.
     (default is branch main)
 
+  --no-populate
+    Don't populate the application state with test data.
+
   --ganache-verbose
     Log requests sent to Ganache.
 "
@@ -97,6 +100,11 @@ while (( $# > 0 )); do
             __ensure_option_has_value "$@"
             blockchain_dir="$2"
             shift
+            shift
+            ;;
+
+        --no-populate)
+            no_populate=1
             shift
             ;;
 

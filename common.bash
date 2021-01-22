@@ -132,7 +132,7 @@ function __django_manage()
 
 function __do_things()
 {
-    trap '{ [[ -z "$(jobs -p)" ]] || kill -INT $(jobs -p); wait; }' EXIT
+    trap '{ trap - SIGINT; kill -INT -- -$$; wait; }' EXIT
 
     frontend_dir="${frontend_dir:-@main}"
     backend_dir="${backend_dir:-@main}"
@@ -263,31 +263,7 @@ function __do_things()
         pip -q install -r "${backend_dir}/requirements.txt"
     fi
 
-    # generate Ethereum accounts
-
-    if [[ ! -s ethereum-accounts.txt ]]; then
-
-        __log "Generating Ethereum test accounts..."
-
-        printf "%64s\n" | tr " " "9" >> ethereum-accounts.txt
-
-        for (( i = 1; i < ${num_user_accounts:-0} + 1; ++i )); do
-            printf "%64s\n" | tr " " "$i" >> ethereum-accounts.txt
-        done
-
-    fi
-
-    keys=( $( cat ethereum-accounts.txt ) )
-
-    addresses=( $( python <<EOF
-import tuichain_ethereum as tui
-
-for key in "${keys[*]}".split():
-    print(tui.PrivateKey(bytes.fromhex(key)).address)
-EOF
-) )
-
-    # build frontend
+    # get frontend component
 
     if [[ "${frontend_dir}" == @* ]]; then
 
@@ -322,6 +298,30 @@ EOF
         sha1sum "${frontend_dir}/web/package.json" | cut -d' ' -f1 > frontend-package-sha1.txt
         sha1sum "${frontend_dir}/web/package-lock.json" | cut -d' ' -f1 > frontend-package-lock-sha1.txt
     fi
+
+    # generate Ethereum accounts
+
+    if [[ ! -s ethereum-accounts.txt ]]; then
+
+        __log "Generating Ethereum test accounts..."
+
+        printf "%64s\n" | tr " " "9" >> ethereum-accounts.txt
+
+        for (( i = 1; i < ${num_user_accounts:-0} + 1; ++i )); do
+            printf "%64s\n" | tr " " "$i" >> ethereum-accounts.txt
+        done
+
+    fi
+
+    keys=( $( cat ethereum-accounts.txt ) )
+
+    addresses=( $( python <<EOF
+import tuichain_ethereum as tui
+
+for key in "${keys[*]}".split():
+    print(tui.PrivateKey(bytes.fromhex(key)).address)
+EOF
+) )
 
     # run hook to set up Ethereum network
 
@@ -362,6 +362,8 @@ EOF
     if [[ ! -s ethereum-controller-contract.txt ]]; then
 
         __log "Deploying controller contract..."
+
+        rm -f django-database.sqlite3
 
         python <<EOF > ethereum-controller-contract.txt
 import web3
@@ -409,9 +411,43 @@ EOF
 
     fi
 
-    # run django and create-react-app development servers
+    # start django development server
 
-    __log "Starting Django and Create-React-App development servers..."
+    __log "Starting Django development server..."
+
+    __django_manage runserver --nothreading 8000 &
+
+    while ! nc -z localhost 8000 > /dev/null 2>&1; do sleep 1; done
+
+    # populate application state
+
+    if [[ "${no_populate:-}" != 1 ]] && (( ${#keys[@]} >= 6 )) && [[ ! -e populated ]]; then
+        __log "Populating application state..."
+        python \
+            "${script_dir}/populate-entry.py" \
+            http://localhost:8000 "${network_url}" \
+            "${keys[1]}" "${keys[2]}" "${keys[3]}" "${keys[4]}" "${keys[5]}" \
+            || { rm ethereum-controller-contract.txt; exit 1; }
+        touch populated
+    fi
+
+    # start create-react-app development server
+
+    __log "Starting Create-React-App development server..."
+
+    (
+        set -o errexit -o pipefail -o nounset
+        cd "${frontend_dir}/web"
+        export BROWSER FORCE_COLOR REACT_APP_API_URL
+        BROWSER=none
+        FORCE_COLOR=true
+        REACT_APP_API_URL=http://localhost:8000/api
+        npm run start | cat
+    ) &
+
+    while ! nc -z localhost 3000 > /dev/null 2>&1; do sleep 1; done
+
+    # print info
 
     __notice "Create-React-App development server:"
     __notice "     http://localhost:3000/"
@@ -442,17 +478,7 @@ EOF
 
     fi
 
-    __django_manage runserver 8000 &
-
-    (
-        set -o errexit -o pipefail -o nounset
-        cd "${frontend_dir}/web"
-        export BROWSER FORCE_COLOR REACT_APP_API_URL
-        BROWSER=none
-        FORCE_COLOR=true
-        REACT_APP_API_URL=http://localhost:8000/api
-        npm run start | cat
-    ) &
+    # wait for one of the servers to terminate
 
     wait -n
 }
