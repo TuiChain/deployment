@@ -95,7 +95,9 @@ function __django_manage()
             EMAIL_BACKEND \
             ETHEREUM_PROVIDER \
             ETHEREUM_MASTER_ACCOUNT_PRIVATE_KEY \
-            ETHEREUM_CONTROLLER_ADDRESS
+            ETHEREUM_CONTROLLER_ADDRESS \
+            GCP_CREDS_FILE \
+            GCP_BUCKET_NAME
 
         SECRET_KEY=test
         DEBUG=True
@@ -118,6 +120,9 @@ function __django_manage()
         ETHEREUM_PROVIDER="${network_url}"
         ETHEREUM_MASTER_ACCOUNT_PRIVATE_KEY="${keys[0]}"
         ETHEREUM_CONTROLLER_ADDRESS="${controller_contract_address}"
+
+        GCP_CREDS_FILE=creds.json
+        GCP_BUCKET_NAME=tuichain
 
         python "${backend_dir}/manage.py" "$@"
     )
