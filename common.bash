@@ -193,6 +193,21 @@ function __do_things()
         touch pip-upgraded
     fi
 
+    # install rust
+
+    export CARGO_HOME RUSTUP_HOME PATH
+    CARGO_HOME="$( __resolve . )/cargo"
+    RUSTUP_HOME="$( __resolve . )/rustup"
+    PATH="${CARGO_HOME}/bin:${PATH}"
+
+    if [[ ! -e rust-installed ]]; then
+        __log "Installing Rust..."
+        curl https://sh.rustup.rs -sSf \
+            | sh -s -- -q -y --no-modify-path --default-toolchain nightly --profile minimal \
+            > /dev/null
+        touch rust-installed
+    fi
+
     # install blockchain component
 
     if [[ "${blockchain_dir}" == @* ]]; then
