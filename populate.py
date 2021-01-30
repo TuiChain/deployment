@@ -1,5 +1,4 @@
 # ---------------------------------------------------------------------------- #
-
 # signup and login
 
 admin = login_admin()
@@ -49,14 +48,15 @@ eve = signup_user(
     ethereum_key=argv[7],
 )
 
-# set up Alice's loan
+# ---------------------------------------------------------------------------- #
+# set up Alice's loan (ends up in phase Funding)
 
 alice_loan_id = alice.post(
     path="/api/loans/new/",
     request={
         "school": "University of Alice",
         "course": "Alice Engineering",
-        "requested_value_atto_dai": str(10000 * oneDai),
+        "requested_value_atto_dai": str(10_000 * oneDai),
         "destination": "Portugal",
         "description": "Hi, I am Alice.",
         "recipient_address": str(alice.key.address),
@@ -77,18 +77,19 @@ dough.transact(
     path="/api/loans/transactions/provide_funds/",
     request={
         "loan_id": alice_loan_id,
-        "value_atto_dai": str(5000 * oneDai),
+        "value_atto_dai": str(5_000 * oneDai),
     },
 )
 
-# set up Bob's loan
+# ---------------------------------------------------------------------------- #
+# set up Bob's loan (ends up in phase Active)
 
 bob_loan_id = bob.post(
     path="/api/loans/new/",
     request={
         "school": "University of Bob",
         "course": "Bob Engineering",
-        "requested_value_atto_dai": str(10000 * oneDai),
+        "requested_value_atto_dai": str(10_000 * oneDai),
         "destination": "Portugal",
         "description": "Hi, I am Bob.",
         "recipient_address": str(bob.key.address),
@@ -109,7 +110,7 @@ dough.transact(
     path="/api/loans/transactions/provide_funds/",
     request={
         "loan_id": bob_loan_id,
-        "value_atto_dai": str(5000 * oneDai),
+        "value_atto_dai": str(5_000 * oneDai),
     },
 )
 
@@ -117,18 +118,19 @@ eve.transact(
     path="/api/loans/transactions/provide_funds/",
     request={
         "loan_id": bob_loan_id,
-        "value_atto_dai": str(5000 * oneDai),
+        "value_atto_dai": str(5_000 * oneDai),
     },
 )
 
-# set up Charlie's loan
+# ---------------------------------------------------------------------------- #
+# set up Charlie's loan (ends up in phase Finalized)
 
 charlie_loan_id = charlie.post(
     path="/api/loans/new/",
     request={
         "school": "University of Charlie",
         "course": "Charlie Engineering",
-        "requested_value_atto_dai": str(10000 * oneDai),
+        "requested_value_atto_dai": str(10_000 * oneDai),
         "destination": "Portugal",
         "description": "Hi, I am Charlie.",
         "recipient_address": str(charlie.key.address),
@@ -149,7 +151,7 @@ dough.transact(
     path="/api/loans/transactions/provide_funds/",
     request={
         "loan_id": charlie_loan_id,
-        "value_atto_dai": str(5000 * oneDai),
+        "value_atto_dai": str(5_000 * oneDai),
     },
 )
 
@@ -157,20 +159,24 @@ eve.transact(
     path="/api/loans/transactions/provide_funds/",
     request={
         "loan_id": charlie_loan_id,
-        "value_atto_dai": str(5000 * oneDai),
+        "value_atto_dai": str(5_000 * oneDai),
     },
 )
 
 charlie.transact(
     path="/api/loans/transactions/make_payment/",
-    request={"loan_id": charlie_loan_id, "value_atto_dai": str(12000 * oneDai)},
+    request={
+        "loan_id": charlie_loan_id,
+        "value_atto_dai": str(12_000 * oneDai),
+    },
 )
 
 admin.put(path=f"/api/loans/finalize/{charlie_loan_id}/", request={})
 
-# create sell position by Dough of tokens of Alice's loan
+# ---------------------------------------------------------------------------- #
+# create sell position by Dough of tokens of Bob's loan
 
-eve.transact(
+dough.transact(
     path="/api/market/transactions/create_sell_position/",
     request={
         "loan_id": bob_loan_id,
